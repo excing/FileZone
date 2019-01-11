@@ -3,26 +3,46 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 	"runtime"
 	"flag"
 	"net/http"
 	"io"
 	"path/filepath"
+	"regexp"
+	"strconv"
 )
+
+// go tool pprof http://localhost:6060/debug/pprof/heap
+// @see https://golang.org/pkg/net/http/pprof/
+// import _ "net/http/pprof"
 
 var StorageRootPath string
 
-var FileServerPort string
+var FileServerPort int
 
-func downloadFileHandle(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL)
-	http.ServeFile(w, r, r.URL.Path[1:])
+func downloadFileHandle(w http.ResponseWriter, r *http.Request, filename string) {
+  flPath := filepath.Join(StorageRootPath, filename)
+  if _, err := os.Stat(flPath); os.IsNotExist(err) {
+		fmt.Println(err)
+		http.NotFound(w, r)
+		return
+	}
+
+	content, err := os.Open(flPath)
+	if err != nil {
+		fmt.Println(err)
+		http.NotFound(w, r)
+		return
+	}
+	defer content.Close()
+
+	fmt.Println("download finish:", flPath)
+	http.ServeContent(w, r, filename, time.Time{}, content)
 }
 
 // 上传图像接口
 func uploadFileHandle(w http.ResponseWriter, r *http.Request) {
-	os.Mkdir(StorageRootPath, os.ModePerm)
-
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		fmt.Println(err)
@@ -44,8 +64,8 @@ func uploadFileHandle(w http.ResponseWriter, r *http.Request) {
 
 	FilePath, _ := filepath.Abs(f1.Name())
 
-	fmt.Println("file path:", FilePath)
 	wirteResponse(w, "{\"code\": 0}")
+	fmt.Println("save finish:", FilePath)
 }
 
 func wirteResponse(w http.ResponseWriter, body string) {
@@ -62,6 +82,20 @@ func errorHandle(err error, w http.ResponseWriter) {
 	}
 }
 
+var validPath = regexp.MustCompile("^/(assets)/(.+)$")
+
+func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.URL.Path)
+		m := validPath.FindStringSubmatch(r.URL.Path)
+		if m == nil {
+			http.NotFound(w, r)
+			return
+		}
+		fn(w, r, m[2])
+	}
+}
+
 func SetStorageRootPath(Path string) {
 	StorageRootPath = Path
 }
@@ -75,7 +109,7 @@ func init() {
 		case "linux":
 			flag.StringVar(&StorageRootPath, "s", "/var/www/assets", "file storage root path")
 	}
-	flag.StringVar(&FileServerPort, "p", "8090", "file server port")
+	flag.IntVar(&FileServerPort, "p", 8090, "file server port")
 }
 
 func main() {
@@ -84,10 +118,19 @@ func main() {
 
 	StorageRootPath, _ = filepath.Abs(StorageRootPath)
 
-	fmt.Println("args:", StorageRootPath, "," , FileServerPort)
+	var err error
+	if _, err = os.Stat(StorageRootPath); os.IsNotExist(err) {
+		err = os.MkdirAll(StorageRootPath, os.ModePerm)
+		if err != nil {
+			fmt.Println("Can't create storage root directory")
+			return
+		}
+	}
+
+	fmt.Println("args:", StorageRootPath, "," , strconv.Itoa(FileServerPort))
 
 	http.HandleFunc("/upload", uploadFileHandle)
-	http.HandleFunc("/assets/", downloadFileHandle)
-	err := http.ListenAndServe(":" + FileServerPort, nil)
+	http.HandleFunc("/assets/", makeHandler(downloadFileHandle))
+	err = http.ListenAndServe("0.0.0.0:" + strconv.Itoa(FileServerPort), nil)
 	fmt.Println(err)
 }
