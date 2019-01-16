@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">文件空间</string>
+    <string name="action_time_order_by">按时间排序</string>
+    <string name="action_name_order_by">按名称排序</string>
+    <string name="action_size_order_by">按大小排序</string>
+    <string name="hint_upload_url">上传地址</string>
+    <string name="action_github" translatable="false">GitHub</string>
+</resources>

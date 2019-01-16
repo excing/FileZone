@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">FileZone</string>
+    <string name="action_time_order_by">order by name</string>
+    <string name="action_name_order_by">order by time</string>
+    <string name="action_size_order_by">order by size</string>
+    <string name="hint_upload_url">Upload Url</string>
+</resources>

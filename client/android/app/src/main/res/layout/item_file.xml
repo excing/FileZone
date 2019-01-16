@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:orientation="horizontal">
+
+    <Space
+        android:layout_width="3dp"
+        android:layout_height="1dp" />
+
+    <ImageView
+        android:id="@+id/image_file_icon"
+        android:src="@drawable/baseline_folder_black_36"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical" />
+
+    <Space
+        android:layout_width="7dp"
+        android:layout_height="1dp" />
+
+    <TextView
+        android:id="@+id/text_file_name"
+        android:textSize="16sp"
+        android:textColor="@android:color/black"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1" />
+
+    <Space
+        android:layout_width="7dp"
+        android:layout_height="1dp" />
+
+    <CheckBox
+        android:id="@+id/check_file_select"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical" />
+
+</LinearLayout>

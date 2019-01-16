@@ -1,0 +1,73 @@
+apply plugin: 'com.android.application'
+
+// 默认版本号
+ext.appVersionCode = 1
+// 默认版本名
+ext.appVersionName = "v0.1.0"
+// 默认apk输出路径
+ext.appReleaseDir = "../../../../release/"
+// 默认包后缀名
+ext.appSuffixName = "release.apk"
+// 默认app名称
+ext.appPrefixName="FileZone_Android"
+
+// 加载版本信息配置文件方法
+def loadProperties() {
+    def proFile = file("../local.properties")
+    Properties pro = new Properties()
+    proFile.withInputStream { stream->
+        pro.load(stream)
+    }
+    appReleaseDir = pro.appReleaseDir
+    appVersionCode = Integer.valueOf(pro.appVersionCode)
+    appVersionName = pro.appVersionName
+    appSuffixName = pro.appSuffixName
+    appPrefixName = pro.appPrefixName
+}
+//加载版本信息
+loadProperties()
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.arvingin.filezone"
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode appVersionCode
+        versionName appVersionName
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    applicationVariants.all { variant ->
+        if (variant.buildType.name.equals('release')) {
+            variant.outputs.all { output ->
+                def releaseApkName = appPrefixName + "_" + versionName + "_" + appSuffixName
+                outputFileName = appReleaseDir + versionName + "/" + releaseApkName
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            zipAlignEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'com.android.support:design:28.0.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+    implementation ('com.arialyy.aria:aria-core:3.5.4') {
+        exclude group: 'com.android.support'
+    }
+    annotationProcessor 'com.arialyy.aria:aria-compiler:3.5.4'
+
+    implementation 'me.panpf:sketch:2.6.2'
+    implementation 'me.panpf:sketch-gif:2.6.2'
+}

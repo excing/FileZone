@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"io"
 	"path/filepath"
-	"regexp"
 	"strconv"
 )
 
@@ -82,17 +81,14 @@ func errorHandle(err error, w http.ResponseWriter) {
 	}
 }
 
-var validPath = regexp.MustCompile("^/(assets)/(.+)$")
-
 func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r.URL.Path)
-		m := validPath.FindStringSubmatch(r.URL.Path)
-		if m == nil {
+		if 1 == len(r.URL.Path) {
 			http.NotFound(w, r)
 			return
 		}
-		fn(w, r, m[2])
+		fn(w, r, r.URL.Path[1:])
 	}
 }
 
@@ -130,7 +126,7 @@ func main() {
 	fmt.Println("args:", StorageRootPath, "," , strconv.Itoa(FileServerPort))
 
 	http.HandleFunc("/upload", uploadFileHandle)
-	http.HandleFunc("/assets/", makeHandler(downloadFileHandle))
+	http.HandleFunc("/", makeHandler(downloadFileHandle))
 	err = http.ListenAndServe("0.0.0.0:" + strconv.Itoa(FileServerPort), nil)
 	fmt.Println(err)
 }
